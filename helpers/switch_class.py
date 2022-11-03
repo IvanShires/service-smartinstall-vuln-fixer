@@ -2,8 +2,10 @@ from netmiko import ConnectHandler
 import os
 
 ## Switch Credentials
-switch_user = os.environ['network_switch_usr']
-switch_password = os.environ['network_switch_pwd']
+switch_user = os.environ['network_switch_usr'])
+switch_password = os.environ['network_switch_pwd'])
+
+## Versions that do NOT support 'no vstack'
 
 class switch_connect:
     def __init__(self,switch_ipaddr):
@@ -20,4 +22,7 @@ class switch_connect:
             "timeout": 30,
         }
         with ConnectHandler(**device) as net_connect:
-            output = net_connect.send_command(command,use_textfsm=True)
+            self.output = net_connect.send_command(command,use_textfsm=True)
+        
+    def get_version(self):
+        return self.output[0]['version']
