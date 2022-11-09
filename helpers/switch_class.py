@@ -1,5 +1,6 @@
 from netmiko import ConnectHandler
 import os
+import re
 from datetime import datetime
 
 ## Switch Credentials
@@ -17,9 +18,8 @@ def get_time():
 class switch_connect:
     def __init__(self,switch_ipaddr):
         self.switch_ipaddr = switch_ipaddr
-        self.info = self.get_information()
 
-    def get_information(self):
+    def get_version(self):
         command = "show version"
         device = {
             "device_type": "cisco_ios",
@@ -30,7 +30,21 @@ class switch_connect:
         }
         with ConnectHandler(**device) as net_connect:
             self.output = net_connect.send_command(command,use_textfsm=True)
-        return self.output
+        return self.output[0]['version']
+
+    def get_users_connected(self):
+        command = "show users"
+        device = {
+            "device_type": "cisco_ios",
+            "host": str(self.switch_ipaddr),
+            "username": str(switch_user),
+            "password": str(switch_password),
+            "timeout": 30,
+        }
+        with ConnectHandler(**device) as net_connect:
+            self.output = net_connect.send_command(command)
+            vty_active = re.findall(r'vty [0-9]+',self.output)
+        return len(vty_active)
 
     def smartinstall_vstack(self):
         commands = [
@@ -117,6 +131,3 @@ class switch_connect:
         with ConnectHandler(**device) as net_connect:
             self.output = net_connect.send_config_set(commands)
             self.output += net_connect.save_config()
-
-    def get_version(self):
-        return self.output[0]['version']
